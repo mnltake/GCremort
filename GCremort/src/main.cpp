@@ -10,9 +10,10 @@ struct __attribute__((packed)) SENSOR_DATA {
 } recvData;
 
 uint8_t bs[sizeof(recvData)];
-int R_Pin = 12;
-int L_Pin = 13;
-int KAISOKU_Pin = 4;
+int R_Pin = 4;
+int L_Pin = 5;
+int STOP_Pin = 12;
+int KAISOKU_Pin = 15;
 boolean direction_R=false,direction_L=false;
 int heartBeat;
 int nowdata =0 ;
@@ -42,10 +43,19 @@ void recv_cb(uint8_t *mac, uint8_t *data, uint8_t len) {
   kaisoku =recvData.valve%2;
   if(recvData.direction==1){
     direction_R=true;
-  }else{
+    direction_L=false;
+  }else if(recvData.direction==2){
+    direction_L=true;
     direction_R=false;
+  }else if(recvData.direction==3){
+    direction_R=false;
+    direction_L=false;
+    digitalWrite(STOP_Pin ,HIGH);
+  }else{
+  direction_R=false;
+  direction_L=false;
   }
-  direction_L=recvData.direction;
+
   digitalWrite(KAISOKU_Pin ,kaisoku);
   digitalWrite(16 ,dbg);
   heartBeat = millis();
@@ -58,6 +68,7 @@ void setup() {
   Serial.println();
   pinMode(16,OUTPUT);//led
   pinMode(KAISOKU_Pin,OUTPUT); //
+  pinMode(STOP_Pin,OUTPUT); //
   pinMode(L_Pin,OUTPUT); //left
   pinMode(R_Pin,OUTPUT); //right
   analogWriteFreq(100);//100Hz (slowest)
@@ -75,11 +86,12 @@ void setup() {
 
 void loop() {
   digitalWrite(R_Pin ,direction_R);
-  
+  digitalWrite(L_Pin ,direction_L);
   if (millis() - heartBeat > 300) {
    // Serial.println("Waiting for ESP-NOW messages...");
     heartBeat = millis();
     direction_R=false;
+    direction_L=false;
     digitalWrite(16 ,false);
   }
 

@@ -8,14 +8,17 @@ int j=0;
 int pushN=0;
 int value0,value1;
 uint8_t ti,ti_1;
-int RTC_Pin=0;//GP0
-int NTP_Pin=26;//GP26
 int LED_Pin= 10;
 int t=0;
 int buttonA=1,buttonB=0;
+int R_button=26;
+int L_button= 0;
+
 int goZero=0;
 int sTime=0;
 uint8_t data[8];
+
+
 //+++++++++++++++i_to_char+++++++++++++++++
 // i=IntegerValueData,*d=Array pointer, n=Array start No
 void i_to_char(int i,uint8_t *d, int n)
@@ -57,15 +60,15 @@ void setup() {
 M5.begin();
 M5.Lcd.fillScreen(BLACK);
 M5.Lcd.setRotation(3);
+M5.Lcd.setTextSize(2);
 M5.Lcd.print("ESP-NOW Test\n");
 pinMode(LED_Pin, OUTPUT);
 digitalWrite(LED_Pin,0);
-//========= Ext Signal Pin====
-//pinMode(RTC_Pin, OUTPUT);
-//pinMode(NTP_Pin, OUTPUT);
+pinMode(R_button,INPUT_PULLUP);
+pinMode(L_button, INPUT_PULLUP);
 //========Interrupt Pin========
-pinMode(26, INPUT_PULLUP);
-attachInterrupt(26, zeroR, FALLING);
+//pinMode(26, INPUT_PULLUP);
+//attachInterrupt(26, zeroR, FALLING);
 //========= ESP-NOW初期化=============
 WiFi.mode(WIFI_STA);
 WiFi.disconnect();
@@ -108,20 +111,36 @@ Serial.println("Peer not found.");
 Serial.println("Not sure what happened");
 }
 j=0;
+
 }
 //============================================ESP-NOW END=========================================
 void loop() {
 
 M5.update();
-if(M5.BtnA.wasPressed()){
+
+M5.Lcd.setCursor(10, 10);
+if(M5.BtnA.wasPressed()){//kaisoku
+  M5.Lcd.fillScreen(BLACK) ;
+  M5.Lcd.print("kaisoku");
   buttonA++;
   digitalWrite(LED_Pin,!(buttonA%2));
   i_to_char(0,data,0);
   i_to_char(buttonA,data,4);
   esp_err_t result = esp_now_send(slave.peer_addr, data, sizeof(data));
-}else if(M5.BtnB.isPressed()) {
-  buttonB=1;
-  i_to_char(buttonB,data,0);
+}else if(M5.BtnB.wasPressed()){//STOP
+ M5.Lcd.fillScreen(BLACK) ;
+ M5.Lcd.print("STOP");
+  i_to_char(3,data,0);
+  esp_err_t result = esp_now_send(slave.peer_addr, data, sizeof(data));
+}else if (digitalRead(R_button)==0){//Right
+  M5.Lcd.fillScreen(BLACK) ;
+  M5.Lcd.print("Right");
+  i_to_char(1,data,0);
+  esp_err_t result = esp_now_send(slave.peer_addr, data, sizeof(data));
+}else if (digitalRead(L_button)==0){//Left
+  M5.Lcd.fillScreen(BLACK) ;
+  M5.Lcd.print("Left");
+  i_to_char(2,data,0);
   esp_err_t result = esp_now_send(slave.peer_addr, data, sizeof(data));
 }else{
   i_to_char(0,data,0);
@@ -134,10 +153,6 @@ if(M5.BtnA.wasPressed()){
 
 // if( pushN%2==1 )// 8msec data send
 // {
-digitalWrite(NTP_Pin,0);
-
-
-
 
 //ESP_error(result);
 //====CHECK Send Data==========================================
@@ -147,7 +162,6 @@ Serial.print(data[0]);
 Serial.print(",");
 Serial.println(data[4]);
 
-digitalWrite(NTP_Pin,1);
 // }
 delay(10);
 }
