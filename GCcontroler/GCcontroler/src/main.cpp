@@ -60,7 +60,7 @@ void setup() {
 M5.begin();
 M5.Lcd.fillScreen(BLACK);
 M5.Lcd.setRotation(3);
-M5.Lcd.setTextSize(2);
+M5.Lcd.setTextSize(1);
 M5.Lcd.print("ESP-NOW Test\n");
 pinMode(LED_Pin, OUTPUT);
 digitalWrite(LED_Pin,0);
@@ -115,30 +115,42 @@ j=0;
 }
 //============================================ESP-NOW END=========================================
 void loop() {
-
+M5.Lcd.setTextSize(4);
+M5.Lcd.setCursor(10, 30);
 M5.update();
 
-M5.Lcd.setCursor(10, 10);
 if(M5.BtnA.wasPressed()){//kaisoku
   M5.Lcd.fillScreen(BLACK) ;
-  M5.Lcd.print("kaisoku");
+
   buttonA++;
-  digitalWrite(LED_Pin,!(buttonA%2));
+  boolean kai = !(buttonA%2);
+  if (kai){
+    M5.Lcd.setTextColor(BLUE);
+    M5.Lcd.print("FAST");
+  }else{
+    M5.Lcd.setTextColor(RED);
+    M5.Lcd.print("SLOW");
+  }
+  
+  digitalWrite(LED_Pin,kai);
   i_to_char(0,data,0);
   i_to_char(buttonA,data,4);
   esp_err_t result = esp_now_send(slave.peer_addr, data, sizeof(data));
 }else if(M5.BtnB.wasPressed()){//STOP
- M5.Lcd.fillScreen(BLACK) ;
+ M5.Lcd.fillScreen(RED) ;
+ M5.Lcd.setTextColor(WHITE);
  M5.Lcd.print("STOP");
   i_to_char(3,data,0);
   esp_err_t result = esp_now_send(slave.peer_addr, data, sizeof(data));
 }else if (digitalRead(R_button)==0){//Right
   M5.Lcd.fillScreen(BLACK) ;
+  M5.Lcd.setTextColor(GREEN);
   M5.Lcd.print("Right");
   i_to_char(1,data,0);
   esp_err_t result = esp_now_send(slave.peer_addr, data, sizeof(data));
 }else if (digitalRead(L_button)==0){//Left
   M5.Lcd.fillScreen(BLACK) ;
+  M5.Lcd.setTextColor(ORANGE);
   M5.Lcd.print("Left");
   i_to_char(2,data,0);
   esp_err_t result = esp_now_send(slave.peer_addr, data, sizeof(data));
