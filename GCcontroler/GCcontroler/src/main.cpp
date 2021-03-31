@@ -11,8 +11,8 @@ uint8_t ti,ti_1;
 int LED_Pin= 10;
 int t=0;
 int buttonA=1,buttonB=0;
-int R_button=26;
-int L_button= 0;
+int R_button=32;
+int L_button= 33;
 
 int goZero=0;
 int sTime=0;
@@ -125,10 +125,10 @@ if(M5.BtnA.wasPressed()){//kaisoku
   buttonA++;
   boolean kai = !(buttonA%2);
   if (kai){
-    M5.Lcd.setTextColor(BLUE);
+    M5.Lcd.setTextColor(ORANGE);
     M5.Lcd.print("FAST");
   }else{
-    M5.Lcd.setTextColor(RED);
+    M5.Lcd.setTextColor(GREEN);
     M5.Lcd.print("SLOW");
   }
   
@@ -144,13 +144,13 @@ if(M5.BtnA.wasPressed()){//kaisoku
   esp_err_t result = esp_now_send(slave.peer_addr, data, sizeof(data));
 }else if (digitalRead(R_button)==0){//Right
   M5.Lcd.fillScreen(BLACK) ;
-  M5.Lcd.setTextColor(GREEN);
+  M5.Lcd.setTextColor(RED);
   M5.Lcd.print("Right");
   i_to_char(1,data,0);
   esp_err_t result = esp_now_send(slave.peer_addr, data, sizeof(data));
 }else if (digitalRead(L_button)==0){//Left
   M5.Lcd.fillScreen(BLACK) ;
-  M5.Lcd.setTextColor(ORANGE);
+  M5.Lcd.setTextColor(BLUE);
   M5.Lcd.print("Left");
   i_to_char(2,data,0);
   esp_err_t result = esp_now_send(slave.peer_addr, data, sizeof(data));
