@@ -142,7 +142,7 @@ M5.Lcd.setRotation(3);
 M5.Lcd.setTextSize(1);
 M5.Lcd.print("ESP-NOW Test\n");
 pinMode(LED_Pin, OUTPUT);
-digitalWrite(LED_Pin,0);
+digitalWrite(LED_Pin,HIGH);
 //pinMode(R_button,INPUT_PULLUP);
 //pinMode(L_button, INPUT_PULLUP);
   pinMode(GPIO_NUM_37, INPUT);
