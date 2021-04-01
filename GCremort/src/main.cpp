@@ -14,7 +14,7 @@ int R_Pin = 4;
 int L_Pin = 5;
 int STOP_Pin = 12;
 int KAISOKU_Pin = 15;
-boolean direction_R=false,direction_L=false;
+boolean direction_R=false,direction_L=false,stop=false ;
 int heartBeat;
 int nowdata =0 ;
 boolean dbg = false, kaisoku = false;
@@ -50,10 +50,11 @@ void recv_cb(uint8_t *mac, uint8_t *data, uint8_t len) {
   }else if(recvData.direction==3){
     direction_R=false;
     direction_L=false;
-    digitalWrite(STOP_Pin ,HIGH);
+    stop = true;
   }else{
   direction_R=false;
   direction_L=false;
+  stop = false;
   }
 
   digitalWrite(KAISOKU_Pin ,kaisoku);
@@ -87,6 +88,7 @@ void setup() {
 void loop() {
   digitalWrite(R_Pin ,direction_R);
   digitalWrite(L_Pin ,direction_L);
+  digitalWrite(STOP_Pin ,stop);
   if (millis() - heartBeat > 300) {
    // Serial.println("Waiting for ESP-NOW messages...");
     heartBeat = millis();
