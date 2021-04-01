@@ -2,6 +2,7 @@
 #include <M5StickC.h>
 #include <esp_now.h>
 #include <WiFi.h>
+#include "AXP192.h"
 //********************Genaral Parameters************************************************************
 int i=0;
 int j=0;
@@ -58,6 +59,7 @@ Serial.println("=========zeroR_j===========");
 }//============================================ESP-NOW Sub end==========================================================================================
 void setup() {
 M5.begin();
+M5.Axp.EnableCoulombcounter();
 M5.Lcd.fillScreen(BLACK);
 M5.Lcd.setRotation(3);
 M5.Lcd.setTextSize(1);
@@ -124,12 +126,17 @@ j=0;
 }
 //============================================ESP-NOW END=========================================
 void loop() {
+
+M5.update();
+M5.Lcd.fillScreen(BLACK) ;
+M5.Lcd.setTextColor(WHITE);
+M5.Lcd.setTextSize(2);
+M5.Lcd.setCursor(10, 0);
+M5.Lcd.printf("%.2fv%.0fma\r\n", M5.Axp.GetBatVoltage(), M5.Axp.GetBatCurrent());
 M5.Lcd.setTextSize(4);
 M5.Lcd.setCursor(10, 30);
-M5.update();
-
 if(M5.BtnA.pressedFor(100)){//kaisoku
-  M5.Lcd.fillScreen(BLACK) ;
+  
   buttonA++;
   boolean kai = !(buttonA%2);
   if (kai){
@@ -154,14 +161,14 @@ esp_light_sleep_start();
   esp_err_t result = esp_now_send(slave.peer_addr, data, sizeof(data));
   delay(500);
 }else if (digitalRead(R_button)==0){//Right
-  M5.Lcd.fillScreen(BLACK) ;
+
   M5.Lcd.setTextColor(RED);
   M5.Lcd.print("Right");
   i_to_char(1,data,0);
   esp_err_t result = esp_now_send(slave.peer_addr, data, sizeof(data));
   delay(50);
 }else if (digitalRead(L_button)==0){//Left
-  M5.Lcd.fillScreen(BLACK) ;
+
   M5.Lcd.setTextColor(BLUE);
   M5.Lcd.print("Left");
   i_to_char(2,data,0);
