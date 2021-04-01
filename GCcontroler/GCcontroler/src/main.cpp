@@ -3,6 +3,8 @@
 #include <esp_now.h>
 #include <WiFi.h>
 #include "AXP192.h"
+#include "esp_sleep.h"
+#include "esp_wifi.h"
 //********************Genaral Parameters************************************************************
 int i=0;
 int j=0;
@@ -57,7 +59,82 @@ void zeroR()
 j=0;
 Serial.println("=========zeroR_j===========");
 }//============================================ESP-NOW Sub end==========================================================================================
+void ESP_error(esp_err_t result)
+{
+Serial.print("Send Status: ");
+if (result == ESP_OK) {
+Serial.println("Success");
+} else if (result == ESP_ERR_ESPNOW_NOT_INIT) {
+Serial.println("ESPNOW not Init.");
+} else if (result == ESP_ERR_ESPNOW_ARG) {
+Serial.println("Invalid Argument");
+} else if (result == ESP_ERR_ESPNOW_INTERNAL) {
+Serial.println("Internal Error");
+} else if (result == ESP_ERR_ESPNOW_NO_MEM) {
+Serial.println("ESP_ERR_ESPNOW_NO_MEM");
+} else if (result == ESP_ERR_ESPNOW_NOT_FOUND) {
+Serial.println("Peer not found.");
+} else {
+Serial.println("Not sure what happened");
+}
+j=0;
+}
+void remocon(){
+M5.update();
+M5.Lcd.fillScreen(BLACK) ;
+M5.Lcd.setTextColor(WHITE);
+M5.Lcd.setTextSize(2);
+M5.Lcd.setCursor(10, 0);
+M5.Lcd.printf("%.2fv%.0fma\r\n", M5.Axp.GetBatVoltage(), M5.Axp.GetBatCurrent());
+M5.Lcd.setTextSize(4);
+M5.Lcd.setCursor(10, 30);
+
+if(M5.BtnA.pressedFor(100)){//kaisoku
+  buttonA++;
+  boolean kai = !(buttonA%2);
+  if (kai){
+    M5.Lcd.setTextColor(ORANGE);
+    M5.Lcd.print("FAST");
+  }else{
+    M5.Lcd.setTextColor(GREEN);
+    M5.Lcd.print("SLOW");
+  }
+  
+  digitalWrite(LED_Pin,kai);
+  i_to_char(0,data,0);
+  i_to_char(buttonA,data,4);
+  esp_err_t result = esp_now_send(slave.peer_addr, data, sizeof(data));
+  delay(500);
+
+}else if(M5.BtnB.wasPressed()){//STOP
+  M5.Lcd.fillScreen(RED) ;
+  M5.Lcd.setTextColor(WHITE);
+  M5.Lcd.print("STOP");
+  i_to_char(3,data,0);
+  esp_err_t result = esp_now_send(slave.peer_addr, data, sizeof(data));
+  delay(500);
+}else if (digitalRead(R_button)==0){//Right
+
+  M5.Lcd.setTextColor(RED);
+  M5.Lcd.print("Right");
+  i_to_char(1,data,0);
+  esp_err_t result = esp_now_send(slave.peer_addr, data, sizeof(data));
+  delay(50);
+}else if (digitalRead(L_button)==0){//Left
+
+  M5.Lcd.setTextColor(BLUE);
+  M5.Lcd.print("Left");
+  i_to_char(2,data,0);
+  esp_err_t result = esp_now_send(slave.peer_addr, data, sizeof(data));
+  delay(50);
+}else{
+  i_to_char(0,data,0);
+  //esp_err_t result = esp_now_send(slave.peer_addr, data, sizeof(data));
+}
+}
+
 void setup() {
+
 M5.begin();
 M5.Axp.EnableCoulombcounter();
 M5.Lcd.fillScreen(BLACK);
@@ -66,8 +143,16 @@ M5.Lcd.setTextSize(1);
 M5.Lcd.print("ESP-NOW Test\n");
 pinMode(LED_Pin, OUTPUT);
 digitalWrite(LED_Pin,0);
-pinMode(R_button,INPUT_PULLUP);
-pinMode(L_button, INPUT_PULLUP);
+//pinMode(R_button,INPUT_PULLUP);
+//pinMode(L_button, INPUT_PULLUP);
+  pinMode(GPIO_NUM_37, INPUT);
+  pinMode(GPIO_NUM_39, INPUT);
+  pinMode(GPIO_NUM_32, INPUT_PULLUP);
+  pinMode(GPIO_NUM_33, INPUT_PULLUP);
+  gpio_wakeup_enable(GPIO_NUM_37, GPIO_INTR_LOW_LEVEL);
+  gpio_wakeup_enable(GPIO_NUM_39, GPIO_INTR_LOW_LEVEL);
+  gpio_wakeup_enable(GPIO_NUM_32, GPIO_INTR_LOW_LEVEL);
+  gpio_wakeup_enable(GPIO_NUM_33, GPIO_INTR_LOW_LEVEL);
 //========Interrupt Pin========
 //pinMode(26, INPUT_PULLUP);
 //attachInterrupt(26, zeroR, FALLING);
@@ -93,95 +178,19 @@ if (addStatus == ESP_OK) {
 }// ESP-NOWコールバック登録
 esp_now_register_send_cb(OnDataSent);
 esp_now_register_recv_cb(OnDataRecv);
-}
-void ESP_error(esp_err_t result)
-{
-Serial.print("Send Status: ");
-if (result == ESP_OK) {
-Serial.println("Success");
-} else if (result == ESP_ERR_ESPNOW_NOT_INIT) {
-Serial.println("ESPNOW not Init.");
-} else if (result == ESP_ERR_ESPNOW_ARG) {
-Serial.println("Invalid Argument");
-} else if (result == ESP_ERR_ESPNOW_INTERNAL) {
-Serial.println("Internal Error");
-} else if (result == ESP_ERR_ESPNOW_NO_MEM) {
-Serial.println("ESP_ERR_ESPNOW_NO_MEM");
-} else if (result == ESP_ERR_ESPNOW_NOT_FOUND) {
-Serial.println("Peer not found.");
-} else {
-Serial.println("Not sure what happened");
-}
-j=0;
-
+esp_sleep_enable_gpio_wakeup();
 }
 //============================================ESP-NOW END=========================================
 void loop() {
-M5.Lcd.setTextSize(4);
-M5.Lcd.setCursor(10, 30);
-M5.update();
-M5.Lcd.fillScreen(BLACK) ;
-M5.Lcd.setTextColor(WHITE);
-M5.Lcd.setTextSize(2);
-M5.Lcd.setCursor(10, 0);
-M5.Lcd.printf("%.2fv%.0fma\r\n", M5.Axp.GetBatVoltage(), M5.Axp.GetBatCurrent());
-M5.Lcd.setTextSize(4);
-M5.Lcd.setCursor(10, 30);
-if(M5.BtnA.wasPressed()){//kaisoku
-
-
-  buttonA++;
-  boolean kai = !(buttonA%2);
-  if (kai){
-    M5.Lcd.setTextColor(ORANGE);
-    M5.Lcd.print("FAST");
-  }else{
-    M5.Lcd.setTextColor(GREEN);
-    M5.Lcd.print("SLOW");
-  }
-  
-  digitalWrite(LED_Pin,kai);
-  i_to_char(0,data,0);
-  i_to_char(buttonA,data,4);
-  esp_err_t result = esp_now_send(slave.peer_addr, data, sizeof(data));
-}else if(M5.BtnB.wasPressed()){//STOP
- M5.Lcd.fillScreen(RED) ;
- M5.Lcd.setTextColor(WHITE);
- M5.Lcd.print("STOP");
-  i_to_char(3,data,0);
-  esp_err_t result = esp_now_send(slave.peer_addr, data, sizeof(data));
-}else if (digitalRead(R_button)==0){//Right
-
-  M5.Lcd.setTextColor(RED);
-  M5.Lcd.print("Right");
-  i_to_char(1,data,0);
-  esp_err_t result = esp_now_send(slave.peer_addr, data, sizeof(data));
-}else if (digitalRead(L_button)==0){//Left
-
-  M5.Lcd.setTextColor(BLUE);
-  M5.Lcd.print("Left");
-  i_to_char(2,data,0);
-  esp_err_t result = esp_now_send(slave.peer_addr, data, sizeof(data));
-}else{
-  i_to_char(0,data,0);
-  //esp_err_t result = esp_now_send(slave.peer_addr, data, sizeof(data));
-}
-
-
-
-//Serial.println(t);
-
-// if( pushN%2==1 )// 8msec data send
-// {
-
-//ESP_error(result);
-//====CHECK Send Data==========================================
-//value0=data[0]+data[1]*256+data[2]*256*256+data[3]*256*256*256;
-//value1=data[4]+data[5]*256+data[6]*256*256+data[7]*256*256*256;
+esp_wifi_start();
+remocon();
 Serial.print(data[0]);
 Serial.print(",");
 Serial.println(data[4]);
 
 // }
 delay(10);
+esp_wifi_stop();
+esp_light_sleep_start();
+  
 }
