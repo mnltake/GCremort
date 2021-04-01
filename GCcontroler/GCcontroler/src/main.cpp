@@ -3,6 +3,8 @@
 #include <esp_now.h>
 #include <WiFi.h>
 #include "AXP192.h"
+#include "esp_sleep.h"
+#include "esp_wifi.h"
 //********************Genaral Parameters************************************************************
 int i=0;
 int j=0;
@@ -57,52 +59,7 @@ void zeroR()
 j=0;
 Serial.println("=========zeroR_j===========");
 }//============================================ESP-NOW Sub end==========================================================================================
-void setup() {
-M5.begin();
-M5.Axp.EnableCoulombcounter();
-M5.Lcd.fillScreen(BLACK);
-M5.Lcd.setRotation(3);
-M5.Lcd.setTextSize(1);
-M5.Lcd.print("ESP-NOW Test\n");
-pinMode(LED_Pin, OUTPUT);
-digitalWrite(LED_Pin,0);
-//pinMode(R_button,INPUT_PULLUP);
-//pinMode(L_button, INPUT_PULLUP);
-  pinMode(GPIO_NUM_37, INPUT_PULLUP);
-  pinMode(GPIO_NUM_39, INPUT_PULLUP);
-  pinMode(GPIO_NUM_32, INPUT_PULLUP);
-  pinMode(GPIO_NUM_33, INPUT_PULLUP);
-  gpio_wakeup_enable(GPIO_NUM_37, GPIO_INTR_LOW_LEVEL);
-  gpio_wakeup_enable(GPIO_NUM_39, GPIO_INTR_LOW_LEVEL);
-  gpio_wakeup_enable(GPIO_NUM_32, GPIO_INTR_LOW_LEVEL);
-  gpio_wakeup_enable(GPIO_NUM_33, GPIO_INTR_LOW_LEVEL);
-//========Interrupt Pin========
-//pinMode(26, INPUT_PULLUP);
-//attachInterrupt(26, zeroR, FALLING);
-//========= ESP-NOW初期化=============
-WiFi.mode(WIFI_STA);
-WiFi.disconnect();
-if (esp_now_init() == ESP_OK) {
-Serial.println("ESPNow Init Success");
-M5.Lcd.print("ESPNow Init Success\n");
-} else {
-Serial.println("ESPNow Init Failed");
-M5.Lcd.print("ESPNow Init Failed\n");
-ESP.restart();
-}// マルチキャスト用Slave登録
-memset(&slave, 0, sizeof(slave));
-for (int i = 0; i < 6; ++i) {
-slave.peer_addr[i] = (uint8_t)0xff;
-}
-esp_err_t addStatus = esp_now_add_peer(&slave);
-if (addStatus == ESP_OK) {
-// Pair success
-//Serial.println("Pair success");
-}// ESP-NOWコールバック登録
-esp_now_register_send_cb(OnDataSent);
-esp_now_register_recv_cb(OnDataRecv);
-esp_sleep_enable_gpio_wakeup();
-}
+
 void ESP_error(esp_err_t result)
 {
 Serial.print("Send Status: ");
@@ -122,11 +79,8 @@ Serial.println("Peer not found.");
 Serial.println("Not sure what happened");
 }
 j=0;
-
 }
-//============================================ESP-NOW END=========================================
-void loop() {
-
+void remocon(){
 M5.update();
 M5.Lcd.fillScreen(BLACK) ;
 M5.Lcd.setTextColor(WHITE);
@@ -152,7 +106,7 @@ if(M5.BtnA.pressedFor(100)){//kaisoku
   i_to_char(buttonA,data,4);
   esp_err_t result = esp_now_send(slave.peer_addr, data, sizeof(data));
   delay(500);
-esp_light_sleep_start();
+
 }else if(M5.BtnB.wasPressed()){//STOP
   M5.Lcd.fillScreen(RED) ;
   M5.Lcd.setTextColor(WHITE);
@@ -177,25 +131,67 @@ esp_light_sleep_start();
 }else{
   i_to_char(0,data,0);
   //esp_err_t result = esp_now_send(slave.peer_addr, data, sizeof(data));
-  esp_light_sleep_start();
+}
 }
 
+void setup() {
 
-
-//Serial.println(t);
-
-// if( pushN%2==1 )// 8msec data send
-// {
-
-//ESP_error(result);
-//====CHECK Send Data==========================================
-//value0=data[0]+data[1]*256+data[2]*256*256+data[3]*256*256*256;
-//value1=data[4]+data[5]*256+data[6]*256*256+data[7]*256*256*256;
+M5.begin();
+M5.Axp.EnableCoulombcounter();
+M5.Lcd.fillScreen(BLACK);
+M5.Lcd.setRotation(3);
+M5.Lcd.setTextSize(1);
+M5.Lcd.print("ESP-NOW Test\n");
+pinMode(LED_Pin, OUTPUT);
+digitalWrite(LED_Pin,0);
+//pinMode(R_button,INPUT_PULLUP);
+//pinMode(L_button, INPUT_PULLUP);
+  pinMode(GPIO_NUM_37, INPUT);
+  pinMode(GPIO_NUM_39, INPUT);
+  pinMode(GPIO_NUM_32, INPUT);
+  pinMode(GPIO_NUM_33, INPUT);
+  gpio_wakeup_enable(GPIO_NUM_37, GPIO_INTR_LOW_LEVEL);
+  gpio_wakeup_enable(GPIO_NUM_39, GPIO_INTR_LOW_LEVEL);
+  gpio_wakeup_enable(GPIO_NUM_32, GPIO_INTR_LOW_LEVEL);
+  gpio_wakeup_enable(GPIO_NUM_33, GPIO_INTR_LOW_LEVEL);
+//========Interrupt Pin========
+//pinMode(26, INPUT_PULLUP);
+//attachInterrupt(26, zeroR, FALLING);
+//========= ESP-NOW初期化=============
+WiFi.mode(WIFI_STA);
+//WiFi.disconnect();
+if (esp_now_init() == ESP_OK) {
+Serial.println("ESPNow Init Success");
+M5.Lcd.print("ESPNow Init Success\n");
+} else {
+Serial.println("ESPNow Init Failed");
+M5.Lcd.print("ESPNow Init Failed\n");
+ESP.restart();
+}// マルチキャスト用Slave登録
+memset(&slave, 0, sizeof(slave));
+for (int i = 0; i < 6; ++i) {
+slave.peer_addr[i] = (uint8_t)0xff;
+}
+esp_err_t addStatus = esp_now_add_peer(&slave);
+if (addStatus == ESP_OK) {
+// Pair success
+//Serial.println("Pair success");
+}// ESP-NOWコールバック登録
+esp_now_register_send_cb(OnDataSent);
+esp_now_register_recv_cb(OnDataRecv);
+esp_sleep_enable_gpio_wakeup();
+}
+//============================================ESP-NOW END=========================================
+void loop() {
+esp_wifi_start();
+remocon();
 Serial.print(data[0]);
 Serial.print(",");
 Serial.println(data[4]);
 
 // }
 delay(10);
-
+esp_wifi_stop();
+esp_light_sleep_start();
+  
 }
