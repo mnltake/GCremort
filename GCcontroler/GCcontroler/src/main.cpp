@@ -148,8 +148,8 @@ digitalWrite(LED_Pin,0);
 //pinMode(L_button, INPUT_PULLUP);
   pinMode(GPIO_NUM_37, INPUT);
   pinMode(GPIO_NUM_39, INPUT);
-  pinMode(GPIO_NUM_32, INPUT);
-  pinMode(GPIO_NUM_33, INPUT);
+  pinMode(GPIO_NUM_32, INPUT_PULLUP);
+  pinMode(GPIO_NUM_33, INPUT_PULLUP);
   gpio_wakeup_enable(GPIO_NUM_37, GPIO_INTR_LOW_LEVEL);
   gpio_wakeup_enable(GPIO_NUM_39, GPIO_INTR_LOW_LEVEL);
   gpio_wakeup_enable(GPIO_NUM_32, GPIO_INTR_LOW_LEVEL);
@@ -159,7 +159,7 @@ digitalWrite(LED_Pin,0);
 //attachInterrupt(26, zeroR, FALLING);
 //========= ESP-NOW初期化=============
 WiFi.mode(WIFI_STA);
-//WiFi.disconnect();
+WiFi.disconnect();
 if (esp_now_init() == ESP_OK) {
 Serial.println("ESPNow Init Success");
 M5.Lcd.print("ESPNow Init Success\n");
