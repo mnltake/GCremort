@@ -44,9 +44,11 @@ void recv_cb(uint8_t *mac, uint8_t *data, uint8_t len) {
   if(recvData.direction==1){
     direction_R=true;
     direction_L=false;
+    stop = false;
   }else if(recvData.direction==2){
     direction_L=true;
     direction_R=false;
+    stop = false;
   }else if(recvData.direction==3){
     direction_R=false;
     direction_L=false;
@@ -72,8 +74,7 @@ void setup() {
   pinMode(STOP_Pin,OUTPUT); //
   pinMode(L_Pin,OUTPUT); //left
   pinMode(R_Pin,OUTPUT); //right
-  analogWriteFreq(100);//100Hz (slowest)
-  analogWriteRange(1000);
+  digitalWrite(STOP_Pin ,false);
   Serial.print("This node STA mac: ");
   Serial.println(WiFi.macAddress());
   if (esp_now_init() != 0) {
@@ -94,6 +95,7 @@ void loop() {
     heartBeat = millis();
     direction_R=false;
     direction_L=false;
+    stop =false;
     digitalWrite(16 ,false);
   }
 
