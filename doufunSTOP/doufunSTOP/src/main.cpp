@@ -1,11 +1,12 @@
 #include <Arduino.h>
 #include <esp_now.h>
 #include <WiFi.h>
-#include <FastLED.h>
 
 #define CHANNEL 1
-#define DATA_PIN 27
-CRGB leds[1];
+#define RELAY_PIN 21
+#define LED_PIN 25
+// #define DATA_PIN 32
+// CRGB leds[1];
 // Init ESP Now with fallback
 void InitESPNow() {
   WiFi.disconnect();
@@ -43,23 +44,23 @@ void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
   Serial.print("Last Packet Recv Data: "); Serial.println(*data);
   Serial.println("");
   if (*data == 3){
-    digitalWrite(26,HIGH);
+    digitalWrite(RELAY_PIN ,HIGH);
+    digitalWrite(LED_PIN ,HIGH);
     Serial.println("STOP");
-    leds[0] = CRGB::Red;
-    FastLED.show();
-
-
-  delay(500);
-    delay(2000);
-    digitalWrite(26,LOW);
-    leds[0] = CRGB::Black;
-    FastLED.show();
+    // leds[0] = CRGB::Red;
+    // FastLED.show();
+    delay(5000);
+    digitalWrite(RELAY_PIN ,LOW);
+    digitalWrite(LED_PIN ,LOW);
+    // leds[0] = CRGB::Black;
+    // FastLED.show();
   }
 }
 void setup() {
   Serial.begin(115200);
-  pinMode(26, OUTPUT);
-  FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, 1);
+  pinMode(LED_PIN , OUTPUT); 
+  pinMode(RELAY_PIN , OUTPUT);
+  // FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, 1);
   Serial.println("ESPNow/Basic/Slave Example");
   //Set device in AP mode to begin with
   WiFi.mode(WIFI_AP);
